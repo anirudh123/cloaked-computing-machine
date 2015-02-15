@@ -61,6 +61,7 @@ void eval(char *cmdline);
 void io_redirection(char *cmdline);
 int builtin_cmd(char **argv);
 void do_bgfg(char **argv);
+void do_cd(char **argv);
 void waitfg(pid_t pid);
 
 void sigchld_handler(int sig);
@@ -88,6 +89,12 @@ void app_error(char *msg);
 typedef void handler_t(int);
 handler_t *Signal(int signum, handler_t *handler);
 
+//Lakshmi
+void read_profile(void);
+void set_home_dir(void);
+void emit_my_prompt(void);
+//Lakshmi
+
 /*
  * main - The shell's main routine 
  */
@@ -100,6 +107,8 @@ int main(int argc, char **argv)
     /* Redirect stderr to stdout (so that driver will get all output
      * on the pipe connected to stdout) */
     dup2(1, 2);
+    read_profile_file();
+    set_home_dir();
 
     /* Parse the command line */
     while ((c = getopt(argc, argv, "hvp")) != EOF) {
@@ -136,7 +145,8 @@ int main(int argc, char **argv)
 
 	/* Read command line */
 	if (emit_prompt) {
-	    printf("%s", prompt);
+	    //printf("%s", prompt);
+	    emit_my_prompt();
 	    fflush(stdout);
 	}
 	if ((fgets(cmdline, MAXLINE, stdin) == NULL) && ferror(stdin))
@@ -182,7 +192,8 @@ void eval(char *cmdline){
     if(!builtin_cmd(argv)){
         if((pid =fork())==0){
             sigprocmask (SIG_UNBLOCK, &blk, NULL);
-            setpgid(0,0); //create a new process group with the pid of child process
+	    //TBD:Uncomment
+            //setpgid(0,0); //create a new process group with the pid of child process
         if(execvp(argv[0],argv)<0){
             printf("%s: Command not found.\n", argv[0]);
         }
@@ -275,6 +286,8 @@ int builtin_cmd(char **argv) {
         return 1;
     } else if (strcmp(argv[0],"fg")==0){
         do_bgfg(argv);
+    } else if (strcmp(argv[0],"cd")==0){
+        do_cd(argv);
         return 1;
     }
     return 0; /* not a builtin command */
@@ -779,5 +792,18 @@ void io_redirection(char *cmdline) {
     }
 }
 
+/*
+ * This function implements built-in command 'cd'
+ */
+void do_cd(char **argv)
+{
+	if(!chdir(argv[1]))
+	{
+		printf("Changed directory to %s \n", argv[1]);
+	}
+	else
+	{
+		printf("Error while setting home directory to %s errno:%d\n", argv[1], errno);
+	}
 
-
+}
