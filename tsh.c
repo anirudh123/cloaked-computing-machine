@@ -52,6 +52,11 @@ struct job_t {              /* The job struct */
     char cmdline[MAXLINE];  /* command line */
 };
 struct job_t jobs[MAXJOBS]; /* The job list */
+
+//Vivek
+struct list *tsh_list;
+//Vivek
+
 /* End global variables */
 
 
@@ -135,8 +140,13 @@ int main(int argc, char **argv)
     Signal(SIGCHLD, sigchld_handler);  /* Terminated or stopped child */
 
     /* This one provides a clean way to kill the shell */
-    Signal(SIGQUIT, sigquit_handler); 
-
+    Signal(SIGQUIT, sigquit_handler);
+    
+    //Vivek
+    tsh_list = list_init();
+    load_var(tsh_list);
+    //Vivek
+    
     /* Initialize the job list */
     initjobs(jobs);
 
@@ -153,6 +163,9 @@ int main(int argc, char **argv)
 	    app_error("fgets error");
 	if (feof(stdin)) { /* End of file (ctrl-d) */
 	    fflush(stdout);
+        //Vivek
+        store_var(tsh_list);
+        //Vivek
 	    exit(0);
 	}
 
@@ -197,6 +210,9 @@ void eval(char *cmdline){
         if(execvp(argv[0],argv)<0){
             printf("%s: Command not found.\n", argv[0]);
         }
+        //Vivek
+        store_var(tsh_list);
+        //Vivek
         exit(0);
     }
          if(!(bg)){
@@ -280,6 +296,9 @@ int builtin_cmd(char **argv) {
         listjobs(jobs);
         return 1;
     } else if (strcmp(argv[0],"quit")==0){
+        //Vivek
+        store_var(tsh_list);
+        //Vivek
         exit(0);
     } else if (strcmp(argv[0],"bg")==0){
         do_bgfg(argv);
@@ -290,6 +309,19 @@ int builtin_cmd(char **argv) {
         do_cd(argv);
         return 1;
     }
+    //Vivek
+    else if (strcmp(argv[0],"int")==0){
+        var_handle(tsh_list, argv);
+        return 1;
+    } else if (strcmp(argv[0],"cal")==0){
+        cal_handle(tsh_list, argv);
+        return 1;
+    } else if (strcmp(argv[0],"display")==0){
+        display_var(tsh_list, argv);
+        return 1;
+    }
+    //Vivek
+
     return 0; /* not a builtin command */
 }
 
@@ -672,6 +704,9 @@ void usage(void)
     printf("   -h   print this message\n");
     printf("   -v   print additional diagnostic information\n");
     printf("   -p   do not emit a command prompt\n");
+    //Vivek
+    store_var(tsh_list);
+    //Vivek
     exit(1);
 }
 
@@ -681,6 +716,9 @@ void usage(void)
 void unix_error(char *msg)
 {
     fprintf(stdout, "%s: %s\n", msg, strerror(errno));
+    //Vivek
+    store_var(tsh_list);
+    //Vivek
     exit(1);
 }
 
@@ -690,6 +728,9 @@ void unix_error(char *msg)
 void app_error(char *msg)
 {
     fprintf(stdout, "%s\n", msg);
+    //Vivek
+    store_var(tsh_list);
+    //Vivek
     exit(1);
 }
 
@@ -716,6 +757,9 @@ handler_t *Signal(int signum, handler_t *handler)
 void sigquit_handler(int sig) 
 {
     printf("Terminating after receipt of SIGQUIT signal\n");
+    //Vivek
+    store_var(tsh_list);
+    //Vivek
     exit(1);
 }
 
@@ -736,6 +780,9 @@ void io_redirection(char *cmdline) {
             parseline(cmdline, argv);
             if (execvp(argv[0], argv) < 0) {
                 printf("Command not found\n");
+                //Vivek
+                store_var(tsh_list);
+                //Vivek
                 exit(0);
             }
         }
@@ -753,6 +800,9 @@ void io_redirection(char *cmdline) {
             parseline(cmdline, argv);
             if (execvp(argv[0], argv) < 0) {
                 printf("Command not found\n");
+                //Vivek
+                store_var(tsh_list);
+                //Vivek
                 exit(0);
             }
         }
@@ -773,6 +823,9 @@ void io_redirection(char *cmdline) {
             parseline(cmdline, argv);
             if (execvp(argv[0], argv) < 0) {
                 printf("Command not found\n");
+                //Vivek
+                store_var(tsh_list);
+                //Vivek
                 exit(0);
             }
         }
@@ -782,6 +835,9 @@ void io_redirection(char *cmdline) {
             close(filedesc_ar[1]);
             if (execvp(argv[0], argv) < 0) {
                 printf("Command not found\n");
+                //Vivek
+                store_var(tsh_list);
+                //Vivek
                 exit(0);
             }
         }
