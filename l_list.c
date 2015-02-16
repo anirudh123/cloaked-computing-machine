@@ -3,8 +3,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+/*
+ Implementation of linked list with features required to store the variables.
+ 
+ */
 struct Node *node_init(char *var_name, int var_value, int flag){
-
+    
     struct Node *node = malloc(sizeof(struct Node));
     char *temp_var_name;
 
@@ -55,7 +59,6 @@ int list_add(struct list *new_list, int index, char *var_name, int var_value, in
         new_list->head->next = NULL;
 
         ++new_list->size;
-        //list_print(new_list);
 
         return 1;
     }
@@ -79,7 +82,6 @@ int list_add(struct list *new_list, int index, char *var_name, int var_value, in
         current->next->next = NULL;
 
         ++new_list->size;
-        //list_print(new_list);
 
         return 1;
     }
@@ -110,6 +112,7 @@ struct Node *list_search(struct list *new_list, char *var_name){
 void list_print(struct list *new_list){
 
     struct Node *current = new_list->head;
+    
     while (current != NULL){
         printf("%s  ",current->var_name);
         printf("\n%d\n",current->var_value);

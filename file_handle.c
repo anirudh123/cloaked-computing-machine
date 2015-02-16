@@ -7,21 +7,26 @@ int createVarFile (char *fileName){
 
     FILE *pf=NULL;
     char* buff = (char *)calloc(BLOCK_SIZE,sizeof(char));
-    pf = fopen(fileName,"w+");                  //create the file.
+
+    //create the file.
+    pf = fopen(fileName,"w+");
+    
     int returnV = -1;
+    
     if(fprintf(pf, "%s",buff)==0) {
         returnV = 0;
     } else{
         returnV = 1;
     }
-
-    free(buff);                                 //release the space.
-    fclose(pf);                                 //close the file.
-
+    //release the space. and close the file.
+    free(buff);
+    fclose(pf);
+    
     return returnV;
 }
 
 int openVarFile (char *fileName, SH_FileHandle *fHandle){
+    //Open the file, and store onformation to the handle variable.
     FILE *pf=NULL;
     long len;
     long tailPointer = -1;
@@ -32,16 +37,16 @@ int openVarFile (char *fileName, SH_FileHandle *fHandle){
     else
     {
         fseek(pf,0L,SEEK_END);
-        tailPointer = ftell(pf);                //offset of the tail of the file.
-        if(tailPointer == -1)                   // if failed to fetch the offset, return failed.
+        tailPointer = ftell(pf);
+        if(tailPointer == -1)
             returnV = 0;
         else{
-            len=tailPointer+1;                  //length from the tail to the head of the page file = bytes of the page file.
-            fHandle ->fileName = fileName;      //assign the fHandle's attributions.
+            len=tailPointer+1;
+            fHandle ->fileName = fileName;
             fHandle ->totalNumVars =(int) (len/(BLOCK_SIZE))+1;
             fHandle ->curVarPos =0;
             fHandle ->mgmtInfo = pf;
-            returnV = 0;                      // succeed to initialize the file handler
+            returnV = 0;
         }
     }
     return returnV;
@@ -79,21 +84,22 @@ int readVar (int varNum, SH_FileHandle *fHandle, SH_VarHandle memVar){
 }
 
 int writeVar (int varNum, SH_FileHandle *fHandle, SH_VarHandle memVar){
+    // write the variable to correct position.
     if(fHandle->totalNumVars<=varNum||varNum<0) {
         return 0;
     }
-    if(fHandle->mgmtInfo==NULL){                 //if no such a pointer exists. return NOT FOUND.
+    if(fHandle->mgmtInfo==NULL){
         return 0;
     }
     if(fseek(fHandle->mgmtInfo,BLOCK_SIZE*varNum*sizeof(char),SEEK_SET)!=0){
         return 0;
     }
-    //set the pointer's value to be the start of the pageNumth's block.
+
     if (!fprintf(fHandle->mgmtInfo, "%s",  memVar)) {
-        return 0;                 //if failed to write the block return WRITE_FAILED.
+        return 0;
     }
-    //write this block's content from the mempage.
-    fHandle->curVarPos=varNum;                //save the current page's position.
+
+    fHandle->curVarPos=varNum;
     return 1;
 }
 
