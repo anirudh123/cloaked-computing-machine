@@ -14,6 +14,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include "calc.h"
 
 /* Misc manifest constants */
 #define MAXLINE    1024   /* max line size */
