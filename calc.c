@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <ctype.h>
 #include "file_handle.h"
 #include "calc.h"
 
@@ -13,19 +14,41 @@ void var_handle (struct list *new_list, char **argv){
      //If exists, update the value.
      //If doesn't exist, add to the list.
      */
-    
+
     char *temp_var_name, *temp_var_value;
 
     struct Node *temp;
-
+    
     //expected command syntax : int <var_name> = <var_value>
     //extract the var_name and var_value
-    
+
+    if(!argv[1] || !argv[2] || !argv[3] || strcmp(argv[2], "=")!=0){
+        printf("variable syntax not correct. Please follow below syntax (space seperated):\n");
+        printf("int <var_name> = <var_value>\n");
+        return;
+    }
+
     temp_var_name = argv[1];
     temp_var_value = argv[3];
 
+    if (temp_var_name[0] == '$'){
+        printf("variable syntax not correct. Please follow below syntax (space seperated):\n");
+        printf("int <var_name> = <var_value>\n");
+        return;
+    }
+
+    size_t length = strlen(temp_var_value);
+
+    for (int i=0; i<length; i++)
+        if (!isdigit(temp_var_value[i]))
+        {
+            printf ("Entered value is not a number.\n");
+            return;
+        }
+
     if (new_list->size == 0){
         //if emplty list, just add the variable as head.
+
         list_add(new_list, -1, temp_var_name, (atoi)(temp_var_value), 1);
 
         return;
@@ -42,7 +65,6 @@ void var_handle (struct list *new_list, char **argv){
         else{
             //if found, updatet the value.
             node_update(temp, (atoi)(temp_var_value));
-            //list_print(new_list);
             return;
         }
     }
@@ -50,11 +72,11 @@ void var_handle (struct list *new_list, char **argv){
 
 void cal_handle (struct list *new_list, char **argv){
     /*
-    //function for calculator app.
-    //accepts three variables and an operand in predefined syntax.
-    //calculates the answer if variables already defined, otherwise gives error message.
+     //function for calculator app.
+     //accepts three variables and an operand in predefined syntax.
+     //calculates the answer if variables already defined, otherwise gives error message.
      */
-    
+
     char *ans_var, *first_var, *second_var, *operation;
     struct Node *ans_node, *first_node, *second_node;
     int ans, first, second;
@@ -65,27 +87,87 @@ void cal_handle (struct list *new_list, char **argv){
     second_var = argv[5];
     operation = argv[4];
 
-    if (first_var[0] == '$' && second_var[0] == '$'){
-        // if correct syntax with '$' , extract the variable names.
-        first_var = first_var + 1;
-        second_var = second_var + 1;
-    }
-    else{
-        // if syntax error : '$' missing, return with error message.
-        printf("\nvariable syntax not correct.\n");
+    int f_num = 1, s_num = 1;
+    size_t length;
+
+    //Answer variable
+
+    if (ans_var[0] == '$' || strcmp(argv[2], "=")!= 0){
+        printf("variable syntax not correct. Please follow below syntax (space seperated):\n");
+        printf("cal <result_var> = [$<first_var> | <numeric_value>] <operation> [$<second_var> | <numeric_value>]\n");
         return;
     }
 
-    if (((first_node = list_search(new_list, first_var)) == NULL) || ((second_node = list_search(new_list, second_var)) == NULL)) {
-        // if any of the two variables don't exist, return with error message.
-        printf("\nvariable(s) not defined for the operation.\n");
-        return;
+    //First variable
+
+    length = strlen(first_var);
+
+    //Check if numeric value.
+    for (int i=0; i<length; i++)
+        if (!isdigit(first_var[i]))
+        {
+            f_num = 0;
+            break;
+        }
+
+    if (f_num == 0){
+        //if non numeric, check syntax, and search for the variable in the list.
+        if (first_var[0] == '$'){
+            first_var = first_var + 1;
+        }
+        else {
+            printf("variable syntax not correct. Please follow below syntax (space seperated):\n");
+            printf("cal <result_var> = [$<first_var> | <numeric_value>] <operation> [$<second_var> | <numeric_value>]\n");
+            return;
+        }
+
+        if ((first_node = list_search(new_list, first_var)) == NULL) {
+            printf("variable(s) not defined for the operation.\n");
+            return;
+        }
+        else {
+            first = first_node->var_value;
+        }
     }
     else{
-        // if variables found, fetch their values or further calculation.
-        first = first_node->var_value;
-        second = second_node->var_value;
+        first = atoi(first_var);
     }
+
+    //Second variable
+
+    length = strlen(second_var);
+
+    //Check if numeric value.
+    for (int i=0; i<length; i++)
+        if (!isdigit(second_var[i]))
+        {
+            s_num = 0;
+            break;
+        }
+
+    if (s_num == 0){
+        //if non numeric, check syntax, and search for the variable in the list.
+        if (second_var[0] == '$'){
+            second_var = second_var + 1;
+        }
+        else {
+            printf("variable syntax not correct. Please follow below syntax (space seperated):\n");
+            printf("cal <result_var> = [$<first_var> | <numeric_value>] <operation> [$<second_var> | <numeric_value>]\n");
+            return;
+        }
+
+        if ((second_node = list_search(new_list, second_var)) == NULL) {
+            printf("variable(s) not defined for the operation.\n");
+            return;
+        }
+        else {
+            second = second_node->var_value;
+        }
+    }
+    else{
+        second = atoi(second_var);
+    }
+    
 
     if(operation[1] == '\0'){
         //if operation correctly defined, and within defined range, calculate the answer.
@@ -105,12 +187,12 @@ void cal_handle (struct list *new_list, char **argv){
         }
         else{
             // if operation not defined, return with error message.
-            printf("\noperation is out of range. (Choose one of +, -, *, / ).\n");
+            printf("operation is out of range. (Choose one of +, -, *, / ).\n");
             return;
         }
     }
     else{
-        printf("\noperation not defined correctly.\n");
+        printf("operation not defined correctly.\n");
         return;
     }
     
@@ -131,10 +213,10 @@ void cal_handle (struct list *new_list, char **argv){
 
 void store_var (struct list *new_list){
     /*
-    //Function to store the variables on the disk.
-    //Gets called when the shell quits.
-    */
-    
+     //Function to store the variables on the disk.
+     //Gets called when the shell quits.
+     */
+
     createVarFile(VAR_FILE);
 
     SH_FileHandle fh;
@@ -169,9 +251,10 @@ void store_var (struct list *new_list){
 
 void load_var (struct list *new_list){
     /*
-    //function to load all the variables stored on disk to the memory
+     //function to load all the variables stored on disk to the memory
      //gets called when the shell starts.
      */
+
     if(access(VAR_FILE, F_OK ) == -1) {
         //check if the files exist. if not, just return.
         return;
@@ -205,8 +288,8 @@ void load_var (struct list *new_list){
 
 void display_var(struct list *new_list, char **argv){
     //function to display the variable.
-    //expects in syntax : display $<var_name>
-
+    //expected syntax : display $<var_name>
+    
     char *temp_var_name;
     struct Node *temp;
 
@@ -217,7 +300,8 @@ void display_var(struct list *new_list, char **argv){
         temp_var_name = temp_var_name + 1;
     }
     else{
-        printf("\nvariable syntax not correct.\n");
+        printf("variable syntax not correct. Please follow below syntax (space seperated):\n");
+        printf("display $<var_name>\n");
         return;
     }
 
@@ -225,7 +309,7 @@ void display_var(struct list *new_list, char **argv){
     temp = list_search(new_list, temp_var_name);
 
     if (temp == NULL){
-        printf("\nvariable has not been initialized.\n");
+        printf("variable has not been initialized.\n");
         return;
     }
     else{
