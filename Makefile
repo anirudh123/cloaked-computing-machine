@@ -2,8 +2,14 @@ CC=clang
 CFLAGS=-I.
 DEPS = 
 
-tsh.o: tsh.c
-	cc -o tsh.o -c tsh.c
+shell.o: shell.c
+	cc -o shell.o -c shell.c
+
+queue.o: queue.c
+	cc -o queue.o -c queue.c
+
+parser.o: parser.c
+	cc -o parser.o -c parser.c
 
 l_list.o: l_list.c
 	cc -o l_list.o -c l_list.c
@@ -17,8 +23,11 @@ calc.o: calc.c
 read_profile.o: read_profile.c
 	cc -o read_profile.o -c read_profile.c
 
-myshell: tsh.o read_profile.o l_list.o file_handle.o calc.o
-		cc -o myshell tsh.o l_list.o file_handle.o calc.o read_profile.o -I.
+myshell: shell.o read_profile.o l_list.o file_handle.o calc.o queue.o parser.o
+		cc -o myshell shell.o l_list.o file_handle.o calc.o read_profile.o queue.o parser.o -I.
 
-clean: tsh.o read_profile.o l_list.o file_handle.o calc.o
-		rm tsh.o read_profile.o l_list.o file_handle.o calc.o
+clean: shell.o read_profile.o l_list.o file_handle.o calc.o queue.o parser.o
+		rm shell.o read_profile.o l_list.o file_handle.o calc.o queue.o parser.o
+
+myshell1: shell.c read_profile.c l_list.c file_handle.c calc.c queue.c parser.c
+		cc shell.c l_list.c file_handle.c calc.c read_profile.c queue.c parser.c -o myshell1 
